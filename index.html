@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Happy Birthday Amy!</title>
+    <!-- MediaPipe Hand Tracking Libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: #000000;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Courier New', Courier, monospace;
+            font-weight: bold;
+            overflow: hidden;
+            perspective: 2000px;
+        }
+
+        /* Top Instruction Bar */
+        .instruction {
+            position: absolute;
+            top: 20px;
+            color: #FFB6C1;
+            font-size: 14px;
+            letter-spacing: 1px;
+            text-align: center;
+            z-index: 100;
+            opacity: 0.9;
+        }
+
+        /* Camera Status & Preview Panel */
+        .camera-panel {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            width: 140px;
+            background: rgba(255, 182, 193, 0.1);
+            border: 1px solid #FFB6C1;
+            border-radius: 8px;
+            padding: 8px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            z-index: 100;
+        }
+
+        .camera-status {
+            color: #FFB6C1;
+            font-size: 10px;
+            margin-top: 5px;
+            text-align: center;
+        }
+
+        #webcam {
+            width: 120px;
+            height: 90px;
+            border-radius: 4px;
+            object-fit: cover;
+            transform: scaleX(-1);
+        }
+
+        /* Flying Hearts Canvas */
+        #heartCanvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 50;
+        }
+
+        /* 3D Card Container */
+        .card-container {
+            width: 450px;
+            height: 600px;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+        }
+
+        .card-container.open {
+            transform: rotateY(-180deg);
+        }
+
+        .card-page {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background-color: #FFFFFF;
+            border-radius: 12px;
+            box-shadow: 0 15px 35px rgba(255, 182, 193, 0.25);
+            backface-visibility: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 30px;
+            color: #FFB6C1;
+            border: 2px solid #FFB6C1;
+        }
+
+        /* Front Cover */
+        .card-front {
+            z-index: 2;
+        }
+
+        .cake-icon {
+            width: 180px;
+            height: 180px;
+            margin-bottom: 30px;
+            fill: none;
+            stroke: #FFB6C1;
+            stroke-width: 3;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .cover-title {
+            font-size: 22px;
+            text-align: center;
+            color: #FFB6C1;
+            line-height: 1.5;
+        }
+
+        /* Inside Back Page */
+        .card-back {
+            transform: rotateY(180deg);
+            justify-content: flex-start;
+            overflow-y: auto;
+            text-align: left;
+            align-items: stretch;
+            scroll-behavior: smooth;
+        }
+
+        .card-back::-webkit-scrollbar {
+            width: 6px;
+        }
+        .card-back::-webkit-scrollbar-thumb {
+            background-color: #FFB6C1;
+            border-radius: 3px;
+        }
+        .card-back::-webkit-scrollbar-track {
+            background: #FFF;
+        }
+
+        .message-block {
+            margin-bottom: 25px;
+            font-size: 13px;
+            line-height: 1.6;
+            color: #FFB6C1;
+            word-wrap: break-word;
+            white-space: pre-wrap;
+            border-bottom: 1px dashed #FFE4E1;
+            padding-bottom: 15px;
+        }
+
+        .message-block:last-child {
+            border-bottom: none;
+        }
+
+        .signature {
+            margin-top: 5px;
+            font-weight: bold;
+            text-align: right;
+            display: block;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="instruction">Press [Spacebar] or [Open Hand] to Open/Close Card</div>
+
+    <!-- Camera Status Panel -->
+    <div class="camera-panel">
+        <video id="webcam" autoplay playsinline muted></video>
+        <div id="cameraStatus" class="camera-status">Initializing Camera...</div>
+    </div>
+
+    <canvas id="heartCanvas"></canvas>
+
+    <div class="card-container" id="card" onclick="toggleCard()">
+        <!-- Card Cover -->
+        <div class="card-page card-front">
+            <svg class="cake-icon" viewBox="0 0 100 100">
+                <path d="M50 15 C50 15 47 22 50 26 C53 22 50 15 50 15 Z" fill="#FFB6C1" stroke="none"/>
+                <line x1="50" y1="26" x2="50" y2="38" />
+                <path d="M30 48 Q 35 42, 40 48 T 50 48 T 60 48 T 70 48" />
+                <rect x="30" y="48" width="40" height="18" rx="2" />
+                <path d="M20 66 Q 26 60, 32 66 T 44 66 T 56 66 T 68 66 T 80 66" />
+                <rect x="20" y="66" width="60" height="22" rx="2" />
+                <line x1="10" y1="88" x2="90" y2="88" stroke-width="4" />
+                <circle cx="35" cy="57" r="1.5" fill="#FFB6C1" />
+                <circle cx="50" cy="57" r="1.5" fill="#FFB6C1" />
+                <circle cx="65" cy="57" r="1.5" fill="#FFB6C1" />
+            </svg>
+            <div class="cover-title">Dear Amy,<br>Happy Birthday!</div>
+        </div>
+
+        <!-- Inside Card Content -->
+        <div class="card-page card-back">
+            <div class="message-block">
+happy birthday amy! i hope you are enjoy your birthday and find peace in getting old lol. thank you for entertaining us with your very interesting train of thoughts…. and sometimes it is difficult to follow but it’s also pretty fun ig lol! i do commend how hardworking you are, balancing all the recruiting mess while pursuing God and keep coming out to house church! i really really appreciate it! and i praise God because you have an amazing heart to LEARN and stay curious about everything!! i’m very excited to spend my senior year with you in the house church. i hope you have a great birthday, get lots of rest, eat great food, take a break from stock pitch and networking, and go relax! have fun getting old!
+<span class="signature">- Sehyun</span>
+            </div>
+
+            <div class="message-block">
+DEAR AMY, happy happy birthday!!! I’m so grateful I was able to meet you last year when we held our baking event haha. You’re such a sweet, lovely, hardworking girl and I hope to continue to get to know you better. So sad not being in the same house church anymore, but I’m happy to always see you around Virani wink wink ANYWAY congratulations on making it through one more year!!! I know this season brings a lot of worries and anxiety, but I’m always so impressed by your work ethic and ambition, and I 100% know you will be just fine in the end. Imagine how it will feel when you secure that internship!!! I’m very very proud of you!!!!! I hope and pray God honors your dedication and the desires in your heart and I know he is proud of his daughter too!! Hope you laugh a lot and make many fun memories this year!
+<span class="signature">- Valerie</span>
+            </div>
+
+            <div class="message-block">
+Dear amy,
+MY BEAUTIFUL OWL ACCESS DAUGHTER ❤️ you’ve come so far…. recruiting season!?!?! you were just a baby yesterday… i’m so happy you’ve joined our house church, it’s God! pushing us together! you bring such a delightful energy to every interaction, and your smile makes me smile so wide. i remember thinking about how sweet you were during owl access, it was my first time doing something like that and i was pretty nervous but your energy made me feel so assured and happy. and i’m happy i get to watch your spiritual journey (YOU’VE COME SO FAR!!!) AND start being a mentor figure to your underclassmen now, and i know times are rough right now… but you will get through it!! i believe in you! i’ll keep you company in fondren ok.. PUSH THRU!!!!
+happy happy bday,
+<span class="signature">- Elise</span>
+            </div>
+
+            <div class="message-block">
+Happy birthday Amy~ we only met a year ago year but I feel like I’ve known you for a long time! I’m really grateful to have you as my roommate & I hope you can find a nap spot on campus😢; recruiting season must be overwhelming but I believe in you because you are the most driven person I know so far (for real) so prioritize yourself and chase after whatever your heart desires. Get some rest from time to time and a lotttttttttttttttttttt of rest after recruiting!
+<span class="signature">- Lucy</span>
+            </div>
+
+            <div class="message-block">
+Happy birthday to gorgeous shinny energetic Amy. Thank you for bringing love and positivity to us and wish you have a blessed 21. Love from Georgia💘生日快乐！祝你每一天都幸福健康开心😚
+<span class="signature">- Georgia</span>
+            </div>
+
+            <div class="message-block">
+Happy birthday Amy! It’s been about a year now since I got to know you and having you as a friend has been so wonderful. Have the best birthday today! This year is going to be your year and I can’t wait to witness all the great things you’ll be doing!
+<span class="signature">- Katie</span>
+            </div>
+
+            <div class="message-block">
+Happy Birthday Amy!!!
+Thank you for talking with me during the summer and at house church last year! The way you talk with me made me really happy, because you always keep a smiling face and seem to enjoy our conversations. When I felt anxious or had some negative feelings, this really gave me a sense of relief, and I really appreciate it! Although we haven’t spent as much time together as you have with other members, I know how hard you’re working to make your future better. I respect your attitude, ambition, and discipline. Also, because of those qualities of yours, I learned something really important for improving my life, both emotionally and personally. In particular, the importance of smiling and the way you express humor are things I learned from you. After imitating how you express your emotions positively, I noticed my mental health improved compared to before. So, I really appreciate you, and I hope this year will be the best year for you!
+<span class="signature">- Yun</span>
+            </div>
+
+            <div class="message-block">
+Hi Amy!!! 
+Happy Birthday!!!!
+I’m so grateful we’re friends:)) 
+I look forward to our shared quality servery time and doing anything and everything together
+I hope we make many more memories^_^
+~P.S. plssss join me at chao asap~
+Have the best day and year!! U deserve it:D
+<span class="signature">- Julia</span>
+            </div>
+
+            <div class="message-block">
+AMYYYY
+HAPPY BIRTHDAYYYY
+I’m so happy I was able to meet such an amazing person through Baker and housechurch. I love our summer grocery runs and we so need to do a Costco run very very soon. 
+You’re genuinely one of the sweetest people I’ve ever met, always having a smile on your face.
+Don’t be too locked in though, make some time for rest and for yourself between your crazy coffee chat schedules!!
+I’m so happy that we were able to take RJM together and get baptized next week and so excited to be there for your spiritual journey!
+I’m so excited get to make more memories and have more Costco runs with you throughout the years~
+HAPPIEST BIRTHDAYYYYY
+<span class="signature">- Lina Kang</span>
+            </div>
+
+            <div class="message-block">
+Heyyyy Amy, happy birthday!!!!! 🥳💗 It was so nice getting to meet and befriend you throughout freshman year. You’re always so outgoing, helpful, and caring, and you’re genuinely one of the most hardworking and smart people I know! Even though sometimes you’re too modest to admit it😎
+I’m really looking forward to hanging out with you more this year!! I hope and pray that everything goes smoothly with recruiting, and that you’ll get to achieve your dream of working in Manhattan soon!! You deserve all the good things coming your way 🫶🏻 Happy birthday again!!! 💕
+<span class="signature">- Ruby</span>
+            </div>
+
+            <div class="message-block">
+HAPPY BIRTHDAY AMYYY !! i hope this new age brings you lots of happiness and joy. you deserve nothing but beautiful moments and amazing memories today and always. keep smiling, keep shining, and enjoy your special day! 🎂🎂🎉🎉🎊🥳
+<span class="signature">- Rachel</span>
+            </div>
+
+            <div class="message-block">
+HAPPY BIRTHDAYYY AMYY! I am so honored to have gotten to know you as a friend this year!! You are SO goated and have a bubbly and warm presence w the ppl you meet. Thank you for all the spontaneous cafe runs we did tg in the summer and for making time in your incredibly busy schedule. I am inspired by how enthusiastic you are with going to going to Sweet Paris the 3rd or 4th time (i hope that’s right) and being down for whatever feels right at the moment. AWE have a good birthday, and i hope you continue to fill your belly and beli with raving food reviews. Seeing your beli posts regularly cheers up my dayyy. much love!! xoxo
+<span class="signature">- Lindsey</span>
+            </div>
+
+            <div class="message-block">
+Happy birthday Amy!! Hope you’ve been doing well and that recruiting is going swimmingly. Thank you for all the spontaneous late-night adventures last semester, from our 1 a.m. run to Bellaire for all-you-can-eat barbecue to those late nights working in El Paso. I had so much fun doing competitions with you. I know you’ve got a lot going on this semester with work and recruiting prep, so I hope you get to take a break and enjoy your birthday today. Really hoping all your hard work pays off and recruiting goes the way you want it to!
+<span class="signature">- James</span>
+            </div>
+
+            <div class="message-block">
+HAPPY BIRTHDAY AMY!! I’m so so happy to have gotten to know you and I’m so glad we are in the same house church! You have such a warm bubbly energy and always spread so much laughter. I hope we can continue growing close through House Church!!
+<span class="signature">- Runshan</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const card = document.getElementById('card');
+        const statusText = document.getElementById('cameraStatus');
+        let isOpen = false;
+
+        // --- Web Audio API: Happy Birthday To You Music Synthesizer ---
+        let audioCtx = null;
+        let isPlaying = false;
+
+        function playBirthdayMusic() {
+            if (isPlaying) return;
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            isPlaying = true;
+
+            // Notes and Durations for Happy Birthday
+            const notes = [
+                {note: 261.63, duration: 0.4}, {note: 261.63, duration: 0.4},
+                {note: 293.66, duration: 0.8}, {note: 261.63, duration: 0.8},
+                {note: 349.23, duration: 0.8}, {note: 329.63, duration: 1.2},
+
+                {note: 261.63, duration: 0.4}, {note: 261.63, duration: 0.4},
+                {note: 293.66, duration: 0.8}, {note: 261.63, duration: 0.8},
+                {note: 392.00, duration: 0.8}, {note: 349.23, duration: 1.2},
+
+                {note: 261.63, duration: 0.4}, {note: 261.63, duration: 0.4},
+                {note: 523.25, duration: 0.8}, {note: 440.00, duration: 0.8},
+                {note: 349.23, duration: 0.8}, {note: 329.63, duration: 0.8},
+                {note: 293.66, duration: 0.8},
+
+                {note: 466.16, duration: 0.4}, {note: 466.16, duration: 0.4},
+                {note: 440.00, duration: 0.8}, {note: 349.23, duration: 0.8},
+                {note: 392.00, duration: 0.8}, {note: 349.23, duration: 1.2}
+            ];
+
+            let startTime = audioCtx.currentTime + 0.1;
+
+            notes.forEach(item => {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                
+                osc.type = 'triangle';
+                osc.frequency.value = item.note;
+
+                gain.gain.setValueAtTime(0.2, startTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, startTime + item.duration - 0.05);
+
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+
+                osc.start(startTime);
+                osc.stop(startTime + item.duration);
+
+                startTime += item.duration;
+            });
+            
+            setTimeout(() => { isPlaying = false; }, (startTime - audioCtx.currentTime) * 1000);
+        }
+
+        // --- Card Toggle Controller ---
+        function toggleCard() {
+            isOpen = !isOpen;
+            if (isOpen) {
+                card.classList.add('open');
+                spawnHearts();
+                playBirthdayMusic();
+            } else {
+                card.classList.remove('open');
+            }
+        }
+
+        // Spacebar Key Listener
+        window.addEventListener('keydown', (e) => {
+            if (e.code === 'Space') {
+                e.preventDefault();
+                toggleCard();
+            }
+        });
+
+        // --- Canvas Flying Hearts Explosion Effect ---
+        const canvas = document.getElementById('heartCanvas');
+        const ctx = canvas.getContext('2d');
+        let hearts = [];
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        class Heart {
+            constructor() {
+                this.x = window.innerWidth / 2;
+                this.y = window.innerHeight / 2;
+                this.size = Math.random() * 15 + 10;
+                this.speedX = (Math.random() - 0.5) * 12;
+                this.speedY = (Math.random() - 0.7) * 12;
+                this.gravity = 0.15;
+                this.opacity = 1;
+                this.rotation = Math.random() * Math.PI * 2;
+                this.rotSpeed = (Math.random() - 0.5) * 0.1;
+                this.color = '#FFB6C1';
+            }
+
+            update() {
+                this.x += this.speedX;
+                this.y += this.speedY;
+                this.speedY += this.gravity;
+                this.opacity -= 0.012;
+                this.rotation += this.rotSpeed;
+            }
+
+            draw() {
+                ctx.save();
+                ctx.translate(this.x, this.y);
+                ctx.rotate(this.rotation);
+                ctx.globalAlpha = Math.max(0, this.opacity);
+                ctx.fillStyle = this.color;
+                
+                ctx.beginPath();
+                const d = this.size;
+                ctx.moveTo(0, 0);
+                ctx.bezierCurveTo(-d / 2, -d / 2, -d, d / 3, 0, d);
+                ctx.bezierCurveTo(d, d / 3, d / 2, -d / 2, 0, 0);
+                ctx.fill();
+                ctx.restore();
+            }
+        }
+
+        function spawnHearts() {
+            for (let i = 0; i < 70; i++) {
+                hearts.push(new Heart());
+            }
+        }
+
+        function animateHearts() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            for (let i = hearts.length - 1; i >= 0; i--) {
+                hearts[i].update();
+                hearts[i].draw();
+                if (hearts[i].opacity <= 0) {
+                    hearts.splice(i, 1);
+                }
+            }
+            requestAnimationFrame(animateHearts);
+        }
+        animateHearts();
+
+        // --- Hand Tracking & Open-Hand Gesture Detector ---
+        let lastTriggerTime = 0;
+
+        function getDistance(p1, p2) {
+            return Math.sqrt(Math.pow(p1.x - p2.x, 2) + Math.pow(p1.y - p2.y, 2));
+        }
+
+        function onResults(results) {
+            if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
+                const landmarks = results.multiHandLandmarks[0];
+                const wrist = landmarks[0];
+
+                const fingerTips = [4, 8, 12, 16, 20];
+                const fingerPip = [2, 6, 10, 14, 18];
+
+                let extendedFingers = 0;
+                for (let i = 0; i < 5; i++) {
+                    const tipDist = getDistance(landmarks[fingerTips[i]], wrist);
+                    const pipDist = getDistance(landmarks[fingerPip[i]], wrist);
+                    if (tipDist > pipDist * 1.2) {
+                        extendedFingers++;
+                    }
+                }
+
+                if (extendedFingers >= 4) {
+                    statusText.innerText = "🖐️ Open Hand Detected!";
+                    statusText.style.color = "#FFB6C1";
+                    
+                    const now = Date.now();
+                    if (now - lastTriggerTime > 1800) {
+                        lastTriggerTime = now;
+                        toggleCard();
+                    }
+                } else {
+                    statusText.innerText = "👀 Hand Tracked (Open Hand)";
+                    statusText.style.color = "#CCCCCC";
+                }
+            } else {
+                statusText.innerText = "📷 Camera On (No Hand Seen)";
+                statusText.style.color = "#888888";
+            }
+        }
+
+        const hands = new Hands({
+            locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
+        });
+
+        hands.setOptions({
+            maxNumHands: 1,
+            modelComplexity: 1,
+            minDetectionConfidence: 0.5,
+            minTrackingConfidence: 0.5
+        });
+
+        hands.onResults(onResults);
+
+        const videoElement = document.getElementById('webcam');
+        const camera = new Camera(videoElement, {
+            onFrame: async () => {
+                await hands.send({ image: videoElement });
+            },
+            width: 320,
+            height: 240
+        });
+
+        camera.start()
+            .then(() => {
+                statusText.innerText = "Camera Ready";
+            })
+            .catch((err) => {
+                console.error(err);
+                statusText.innerText = "Camera Disabled\n(Use Spacebar)";
+                statusText.style.color = "#FF6B6B";
+            });
+    </script>
+</body>
+</html>
