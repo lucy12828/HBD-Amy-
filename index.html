@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Happy Birthday Amy!</title>
-    <!-- 引入 MediaPipe 手势识别库 -->
+    <!-- MediaPipe Hand Tracking Libraries -->
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
     <style>
@@ -26,7 +26,7 @@
             perspective: 2000px;
         }
 
-        /* 顶部操作指示 */
+        /* Top Instruction Bar */
         .instruction {
             position: absolute;
             top: 20px;
@@ -38,7 +38,7 @@
             opacity: 0.9;
         }
 
-        /* 摄像头侦测状态与预览面板 */
+        /* Camera Status & Preview Panel */
         .camera-panel {
             position: absolute;
             bottom: 20px;
@@ -69,7 +69,7 @@
             transform: scaleX(-1);
         }
 
-        /* 爱心画布 */
+        /* Flying Hearts Canvas */
         #heartCanvas {
             position: absolute;
             top: 0;
@@ -80,7 +80,7 @@
             z-index: 50;
         }
 
-        /* 贺卡 3D 容器 */
+        /* 3D Card Container */
         .card-container {
             width: 450px;
             height: 600px;
@@ -111,7 +111,7 @@
             border: 2px solid #FFB6C1;
         }
 
-        /* 贺卡封面 (Front) */
+        /* Front Cover */
         .card-front {
             z-index: 2;
         }
@@ -134,7 +134,7 @@
             line-height: 1.5;
         }
 
-        /* 贺卡内页 (Inside/Back) */
+        /* Inside Back Page */
         .card-back {
             transform: rotateY(180deg);
             justify-content: flex-start;
@@ -180,18 +180,18 @@
 </head>
 <body>
 
-    <div class="instruction">按 [空格键] 或 [张开手掌] 翻开/合上贺卡</div>
+    <div class="instruction">Press [Spacebar] or [Open Hand] to Open/Close Card</div>
 
-    <!-- 摄像头预览与手势状态面板 -->
+    <!-- Camera Status Panel -->
     <div class="camera-panel">
         <video id="webcam" autoplay playsinline muted></video>
-        <div id="cameraStatus" class="camera-status">正在初始化摄像头...</div>
+        <div id="cameraStatus" class="camera-status">Initializing Camera...</div>
     </div>
 
     <canvas id="heartCanvas"></canvas>
 
     <div class="card-container" id="card" onclick="toggleCard()">
-        <!-- 贺卡封面 -->
+        <!-- Card Cover -->
         <div class="card-page card-front">
             <svg class="cake-icon" viewBox="0 0 100 100">
                 <path d="M50 15 C50 15 47 22 50 26 C53 22 50 15 50 15 Z" fill="#FFB6C1" stroke="none"/>
@@ -208,7 +208,7 @@
             <div class="cover-title">Dear Amy,<br>Happy Birthday!</div>
         </div>
 
-        <!-- 贺卡内页 -->
+        <!-- Inside Card Content -->
         <div class="card-page card-back">
             <div class="message-block">
 happy birthday amy! i hope you are enjoy your birthday and find peace in getting old lol. thank you for entertaining us with your very interesting train of thoughts…. and sometimes it is difficult to follow but it’s also pretty fun ig lol! i do commend how hardworking you are, balancing all the recruiting mess while pursuing God and keep coming out to house church! i really really appreciate it! and i praise God because you have an amazing heart to LEARN and stay curious about everything!! i’m very excited to spend my senior year with you in the house church. i hope you have a great birthday, get lots of rest, eat great food, take a break from stock pitch and networking, and go relax! have fun getting old!
@@ -291,6 +291,11 @@ HAPPY BIRTHDAYYY AMYY! I am so honored to have gotten to know you as a friend th
 Happy birthday Amy!! Hope you’ve been doing well and that recruiting is going swimmingly. Thank you for all the spontaneous late-night adventures last semester, from our 1 a.m. run to Bellaire for all-you-can-eat barbecue to those late nights working in El Paso. I had so much fun doing competitions with you. I know you’ve got a lot going on this semester with work and recruiting prep, so I hope you get to take a break and enjoy your birthday today. Really hoping all your hard work pays off and recruiting goes the way you want it to!
 <span class="signature">- James</span>
             </div>
+
+            <div class="message-block">
+HAPPY BIRTHDAY AMY!! I’m so so happy to have gotten to know you and I’m so glad we are in the same house church! You have such a warm bubbly energy and always spread so much laughter. I hope we can continue growing close through House Church!!
+<span class="signature">- Runshan</span>
+            </div>
         </div>
     </div>
 
@@ -299,7 +304,7 @@ Happy birthday Amy!! Hope you’ve been doing well and that recruiting is going 
         const statusText = document.getElementById('cameraStatus');
         let isOpen = false;
 
-        // --- Web Audio API 合成 Happy Birthday 音乐 ---
+        // --- Web Audio API: Happy Birthday To You Music Synthesizer ---
         let audioCtx = null;
         let isPlaying = false;
 
@@ -308,6 +313,7 @@ Happy birthday Amy!! Hope you’ve been doing well and that recruiting is going 
             audioCtx = new (window.AudioContext || window.webkitAudioContext)();
             isPlaying = true;
 
+            // Notes and Durations for Happy Birthday
             const notes = [
                 {note: 261.63, duration: 0.4}, {note: 261.63, duration: 0.4},
                 {note: 293.66, duration: 0.8}, {note: 261.63, duration: 0.8},
@@ -351,7 +357,7 @@ Happy birthday Amy!! Hope you’ve been doing well and that recruiting is going 
             setTimeout(() => { isPlaying = false; }, (startTime - audioCtx.currentTime) * 1000);
         }
 
-        // --- 翻卡逻辑 ---
+        // --- Card Toggle Controller ---
         function toggleCard() {
             isOpen = !isOpen;
             if (isOpen) {
@@ -363,7 +369,7 @@ Happy birthday Amy!! Hope you’ve been doing well and that recruiting is going 
             }
         }
 
-        // 键盘空格键触发
+        // Spacebar Key Listener
         window.addEventListener('keydown', (e) => {
             if (e.code === 'Space') {
                 e.preventDefault();
@@ -371,7 +377,7 @@ Happy birthday Amy!! Hope you’ve been doing well and that recruiting is going 
             }
         });
 
-        // --- Canvas 淡粉色爱心喷洒动画 ---
+        // --- Canvas Flying Hearts Explosion Effect ---
         const canvas = document.getElementById('heartCanvas');
         const ctx = canvas.getContext('2d');
         let hearts = [];
@@ -441,7 +447,7 @@ Happy birthday Amy!! Hope you’ve been doing well and that recruiting is going 
         }
         animateHearts();
 
-        // --- 手势识别逻辑 ---
+        // --- Hand Tracking & Open-Hand Gesture Detector ---
         let lastTriggerTime = 0;
 
         function getDistance(p1, p2) {
@@ -466,7 +472,7 @@ Happy birthday Amy!! Hope you’ve been doing well and that recruiting is going 
                 }
 
                 if (extendedFingers >= 4) {
-                    statusText.innerText = "🖐️ 检测到张开手掌！";
+                    statusText.innerText = "🖐️ Open Hand Detected!";
                     statusText.style.color = "#FFB6C1";
                     
                     const now = Date.now();
@@ -475,11 +481,11 @@ Happy birthday Amy!! Hope you’ve been doing well and that recruiting is going 
                         toggleCard();
                     }
                 } else {
-                    statusText.innerText = "👀 已捕捉手掌（请张开）";
+                    statusText.innerText = "👀 Hand Tracked (Open Hand)";
                     statusText.style.color = "#CCCCCC";
                 }
             } else {
-                statusText.innerText = "📷 摄像头开启（未侦测到手）";
+                statusText.innerText = "📷 Camera On (No Hand Seen)";
                 statusText.style.color = "#888888";
             }
         }
@@ -508,11 +514,11 @@ Happy birthday Amy!! Hope you’ve been doing well and that recruiting is going 
 
         camera.start()
             .then(() => {
-                statusText.innerText = "摄像头已就绪";
+                statusText.innerText = "Camera Ready";
             })
             .catch((err) => {
                 console.error(err);
-                statusText.innerText = "摄像头启用失败\n(请用空格键控制)";
+                statusText.innerText = "Camera Disabled\n(Use Spacebar)";
                 statusText.style.color = "#FF6B6B";
             });
     </script>
